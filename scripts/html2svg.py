@@ -335,7 +335,17 @@ const path = require('path');
                 }
             }
 
-            // 6. 修复 mask-image / -webkit-mask-image（SVG 不支持）
+            // 6. 标记 object-fit 属性到 data 属性，供 SVG 后处理使用
+            // dom-to-svg 不支持 object-fit，转换后 <image> 会丢失纵横比约束
+            for (const img of document.querySelectorAll('img')) {
+                const cs = getComputedStyle(img);
+                const fit = cs.objectFit;
+                if (fit && fit !== 'fill') {
+                    img.setAttribute('data-object-fit', fit);
+                }
+            }
+
+            // 7. 修复 mask-image / -webkit-mask-image（SVG 不支持）
             // 根据元素层级智能降级：底层图片降透明度，前景元素直接移除蒙版
             for (const el of document.querySelectorAll('*')) {
                 const cs = getComputedStyle(el);
@@ -390,6 +400,28 @@ const path = require('path');
                 if (c && !t.getAttribute('fill')) {
                     t.setAttribute('fill', c);
                     t.removeAttribute('color');
+                }
+            }
+
+            // 后处理：为带 data-object-fit 的 <image> 添加 preserveAspectRatio
+            // object-fit: cover -> xMidYMid slice (保持比例，裁切溢出)
+            // object-fit: contain -> xMidYMid meet (保持比例，完整显示)
+            const images = svgDoc.querySelectorAll('image');
+            for (const img of images) {
+                // dom-to-svg 生成的 image id 格式: {原始id}-image
+                // 查找对应的原始 DOM img 的 data-object-fit
+                const imgId = img.getAttribute('id') || '';
+                const origId = imgId.replace(/-image$/, '');
+                const origEl = origId ? document.getElementById(origId) : null;
+                const fit = origEl ? origEl.getAttribute('data-object-fit') : null;
+                if (fit === 'cover') {
+                    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+                } else if (fit === 'contain') {
+                    img.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                } else if (!fit) {
+                    // 没有标记的图片，默认也设为 slice（安全保底）
+                    // 因为 PPT 设计稿中的图片几乎都是 cover 模式
+                    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
                 }
             }
 

@@ -258,7 +258,7 @@ def make_textbox(sid, name, x, y, cx, cy, paragraphs):
     ]))
     tx = _el('p:txBody', children=[
         _el('a:bodyPr', {'wrap': 'none', 'lIns': '0', 'tIns': '0',
-                         'rIns': '0', 'bIns': '0', 'anchor': 't'}),
+                         'rIns': '0', 'bIns': '0', 'anchor': 'ctr'}),
         _el('a:lstStyle'),
     ])
     for runs in paragraphs:
@@ -598,17 +598,21 @@ class SvgConverter:
                 ts_fill = ts.get('fill', fill_s)
                 ts_ff = ts.get('font-family', ff)
                 fh = float(ts_fsz)
-                # baseline偏移: text-after-edge -> y是底部减全高; auto -> y是baseline减85%
+                # 计算文字视觉中心 y，配合 anchor='ctr' 使用
+                # text-after-edge: y 是文字底部 -> 视觉中心 = y - fh/2
+                # 默认 (baseline): y 是基线 (~80% from top) -> 视觉中心 ≈ y - fh*0.3
                 if 'after-edge' in baseline:
-                    y -= fh
+                    y_center = y - fh * 0.5
                 else:
-                    y -= fh * 0.85
+                    y_center = y - fh * 0.3
+                cy_v = px(fh * 1.3)
+                # textbox top = 视觉中心 - 半高
+                y_top = y_center - (fh * 1.3) / 2
                 c = parse_color(ts_fill)
                 hex6 = c[0] if c and c[0] != 'grad' else '000000'
                 alpha = c[1] if c and c[0] != 'grad' else 100000
                 alpha = int(alpha * opacity)
                 cx_v = px(tlen) if tlen > 0 else px(len(txt) * float(ts_fsz) * 0.7)
-                cy_v = px(fh * 1.5)
                 # text-anchor 偏移: middle -> x减半宽, end -> x减全宽
                 if anchor == 'middle':
                     x -= cx_v / EMU_PX / 2
@@ -621,7 +625,7 @@ class SvgConverter:
                     'font': resolve_font(ts_ff),
                 }
                 shape = make_textbox(self._id(), f'T{self.sid}',
-                                     px(x), px(y), cx_v, cy_v, [[run]])
+                                     px(x), px(y_top), cx_v, cy_v, [[run]])
                 sp.append(shape)
                 self.stats['shapes'] += 1
 
@@ -629,11 +633,13 @@ class SvgConverter:
             x = float(el.get('x', 0)) * scale + ox
             y = float(el.get('y', 0)) * scale + oy
             fh = float(fsz)
-            # baseline偏移
+            # 计算文字视觉中心 y，配合 anchor='ctr'
             if 'after-edge' in baseline:
-                y -= fh
+                y_center = y - fh * 0.5
             else:
-                y -= fh * 0.85
+                y_center = y - fh * 0.3
+            cy_v = px(fh * 1.3)
+            y_top = y_center - (fh * 1.3) / 2
             c = parse_color(fill_s)
             hex6 = c[0] if c and c[0] != 'grad' else '000000'
             alpha = c[1] if c and c[0] != 'grad' else 100000
@@ -651,9 +657,8 @@ class SvgConverter:
                 'hex': hex6, 'alpha': alpha, 'font': resolve_font(ff),
             }
             shape = make_textbox(self._id(), f'T{self.sid}',
-                                 px(x), px(y),
-                                 px(len(txt) * float(fsz) * 0.7),
-                                 px(fh * 1.5), [[run]])
+                                 px(x), px(y_top),
+                                 px(txt_w), cy_v, [[run]])
             sp.append(shape)
             self.stats['shapes'] += 1
 
@@ -895,37 +900,32 @@ class SvgConverter:
             self.stats['shapes'] += 1
             return
 
-        # object-fit: cover -- 按比例放大到覆盖容器，然后裁剪
+        # object-fit: cover -- 图片形状=容器尺寸，用 crop 居中裁切源图多余部分
         container_w = px(w)
         container_h = px(h)
         img_ratio = img_w / img_h
         container_ratio = container_w / container_h
 
-        if img_ratio > container_ratio:
-            # 图片更宽 -> 按高度填满，裁剪左右
-            scale_h = container_h
-            scale_w = int(scale_h * img_ratio)
-        else:
-            # 图片更高 -> 按宽度填满，裁剪上下
-            scale_w = container_w
-            scale_h = int(scale_w / img_ratio)
-
-        # 放置缩放后的图片（居中裁剪）
-        offset_x = (scale_w - container_w) / 2
-        offset_y = (scale_h - container_h) / 2
-
+        # 图片形状尺寸 = 容器尺寸（不是缩放后的图片尺寸！）
         pic = slide.shapes.add_picture(img_source,
                                        Emu(px(x)), Emu(px(y)),
-                                       Emu(scale_w), Emu(scale_h))
+                                       Emu(container_w), Emu(container_h))
 
-        # 用 crop 实现裁剪（值为比例 0.0-1.0）
-        if scale_w > 0 and scale_h > 0:
-            crop_lr = offset_x / scale_w  # 左右各裁多少比例
-            crop_tb = offset_y / scale_h  # 上下各裁多少比例
-            pic.crop_left = crop_lr
-            pic.crop_right = crop_lr
-            pic.crop_top = crop_tb
-            pic.crop_bottom = crop_tb
+        # python-pptx crop 值 = 从源图各边裁掉的比例（0.0~1.0）
+        # cover 模式：按较短边缩放到填满容器，从较长边的两侧等量裁切
+        if img_ratio > container_ratio:
+            # 图片更宽 -> 高度填满，左右裁切
+            visible_w_frac = container_ratio / img_ratio
+            crop_each = (1.0 - visible_w_frac) / 2.0
+            pic.crop_left = crop_each
+            pic.crop_right = crop_each
+        elif img_ratio < container_ratio:
+            # 图片更高 -> 宽度填满，上下裁切
+            visible_h_frac = img_ratio / container_ratio
+            crop_each = (1.0 - visible_h_frac) / 2.0
+            pic.crop_top = crop_each
+            pic.crop_bottom = crop_each
+        # img_ratio == container_ratio -> 完美匹配，无需裁切
 
         # 应用透明度（通过 OOXML alphaModFix）
         if el_opacity < 0.99:
