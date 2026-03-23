@@ -328,23 +328,27 @@
 ## 画布规范（不可修改）
 
 - 固定尺寸: width=1280px, height=720px, overflow=hidden
-- 标题区: 左上 40px 边距, y=20~70, 最大高度 50px
-- 内容区: padding 40px, y 从 80px 起, 可用高度 580px, 可用宽度 1200px
+- 标题区: 左上 40px 边距, y=20~90, 最大高度 70px（含 PART 标签 + H1 标题 + 下划线装饰）
+- 内容区: padding 40px, y 从 100px 起, 可用高度 560px, 可用宽度 1200px
 - 页脚区: 底部 40px 边距内，高度 20px
 
 ## 排版系统（Typography Scale）
 
 专业 PPT 的排版不是随意选字号，而是遵循严格的层级阶梯。每一级字号都有明确的用途和间距规则：
 
-| 层级 | 用途 | 字号 | 字重 | 行高 | 颜色 |
-|------|------|------|------|------|------|
-| H0 | 封面主标题 | 48-56px | 900 | 1.1 | --text-primary |
-| H1 | 页面主标题 | 28px | 700 | 1.2 | --text-primary |
-| H2 | 卡片标题 | 18-20px | 700 | 1.3 | --text-primary |
-| Body | 正文段落 | 13-14px | 400 | 1.8 | --text-secondary |
-| Caption | 辅助标注/脚注/来源 | 12px | 400 | 1.5 | --text-secondary, opacity 0.6 |
-| Overline | PART 标识/标签前缀 | 11-12px | 700, letter-spacing: 2-3px | 1.0 | --accent-1 |
-| Data | 数据数字 | 36-48px (卡片) / 64-80px (高亮) | 800-900 | 1.0 | --accent-1 |
+> **⚠️ 字号管线缩放**：HTML 中的 px 经 SVG → PPTX 管线后会以 **0.75 系数缩放为 pt**
+> （如 20px → 15pt）。下表的 px 值已预补偿此缩放，确保 PPTX 中文字大小符合专业演示标准。
+> 详见 `references/pipeline-compat.md` 第 8 章。
+
+| 层级 | 用途 | HTML px | → PPTX pt | 字重 | 行高 | 颜色 |
+|------|------|---------|-----------|------|------|------|
+| H0 | 封面主标题 | 64-75px | 48-56pt | 900 | 1.1 | --text-primary |
+| H1 | 页面主标题 | 37-43px | 28-32pt | 700 | 1.2 | --text-primary |
+| H2 | 卡片标题 | 27-29px | 20-22pt | 700 | 1.3 | --text-primary |
+| Body | 正文段落 | 19-21px | 14-16pt | 400 | 1.8 | --text-secondary |
+| Caption | 辅助标注/脚注/来源 | 15-16px | 11-12pt | 400 | 1.5 | --text-secondary, opacity 0.6 |
+| Overline | PART 标识/标签前缀 | 16-17px | 12-13pt | 700, letter-spacing: 2-3px | 1.0 | --accent-1 |
+| Data | 数据数字 | 48-64px (卡片) / 85-107px (高亮) | 36-48pt / 64-80pt | 800-900 | 1.0 | --accent-1 |
 
 ### 排版间距层级（卡片内部）
 
@@ -363,7 +367,7 @@
 
 - 中文和英文/数字之间自动加一个半角空格（如："增长率达到 47.3%"）
 - 数据数字推荐使用 `font-variant-numeric: tabular-nums` 让数字等宽对齐
-- 大号数据数字（36px+）建议用 `font-family: 'Inter', 'DIN', var(--font-family)` 让数字更有冲击力
+- 大号数据数字（48px+）建议用 `font-family: 'Inter', 'DIN', var(--font-family)` 让数字更有冲击力
 
 ## 色彩比例法则（60-30-10）
 
@@ -405,34 +409,34 @@
 ## 6 种卡片类型的 HTML 实现
 
 ### text（文本卡片）
-- 标题: h3, font-size=18-20px, font-weight=700, color=text-primary
-- 正文: p, font-size=13-14px, line-height=1.8, color=text-secondary
+- 标题: h3, font-size=27-29px, font-weight=700, color=text-primary
+- 正文: p, font-size=19-21px, line-height=1.8, color=text-secondary
 - 关键词: 用 <strong> 或 <span class="highlight"> 包裹（背景 accent-primary 10% 透明度）
 
 ### data（数据卡片）
-- 核心数字: font-size=36-48px, font-weight=800, **直接用 `color: var(--accent-1)`**
+- 核心数字: font-size=48-64px, font-weight=800, **直接用 `color: var(--accent-1)`**
   - **禁止** `background-clip: text` + `-webkit-text-fill-color: transparent` 渐变文字（SVG转换后变成橙色色块+白色文字）
   - html2svg.py 有兜底自动修复，但会丢失渐变效果只保留主色
-- 单位/标签: font-size=14-16px, color=text-secondary 或 color=accent-2
-- 补充说明: font-size=13px, 在数字下方
+- 单位/标签: font-size=19-21px, color=text-secondary 或 color=accent-2
+- 补充说明: font-size=17px, 在数字下方
 
 ### list（列表卡片）
 - 列表项: display=flex, gap=10px
 - 圆点: min-width=6-8px, height=6-8px, border-radius=50%, background=accent-primary
-- 文字: font-size=13px, color=text-secondary, line-height=1.6
+- 文字: font-size=17-19px, color=text-secondary, line-height=1.6
 - 交替使用不同 accent 色的圆点增加层次感
 
 ### tag_cloud（标签云）
 - 容器: display=flex, flex-wrap=wrap, gap=8px
 - 标签: display=inline-block, padding=4px 12px, border-radius=9999px
-- 标签边框: border=1px solid accent-primary 30%透明, color=accent-primary, font-size=12px
+- 标签边框: border=1px solid accent-primary 30%透明, color=accent-primary, font-size=16px
 
 ### process（流程卡片）
 - 步骤: display=flex 水平排列，或垂直排列
 - 节点: width/height=32px, border-radius=50%, background=accent-primary, 居中显示步骤数字
 - 连线: 节点之间用**真实 `<div>` 元素**作为连接线（height=2px, background=accent-color），**禁止**用 ::before/::after 伪元素画连线
 - 箭头: 用内联 `<svg>` 三角形（`<polygon>` 或 `<path>`），**禁止**用 CSS border 技巧画三角形
-- 标签: font-size=12-13px, margin-top=8px
+- 标签: font-size=16-17px, margin-top=8px
 
 ### data_highlight（大数据高亮区）
 - 用于封面或重点页的超大数据展示
@@ -450,8 +454,8 @@
 - **首选纯色**：当不确定渐变效果时，用 accent 纯色（`var(--accent-1)`）替代
 
 ### 层次感
-- 页面标题(H1): 28px, 700 weight, 左上固定位，搭配 accent 色的标题下划线或角标
-- Overline 标记(如"PART 0X"): 11-12px, 700 weight, letter-spacing=2-3px, accent 色
+- 页面标题(H1): 37-43px, 700 weight, 左上固定位，搭配 accent 色的标题下划线或角标
+- Overline 标记(如"PART 0X"): 16-17px, 700 weight, letter-spacing=2-3px, accent 色
 - 卡片标题(H2) > 数据数字(Data) > 正文(Body) > 辅助标注(Caption) -- 严格遵循排版阶梯
 
 ### 装饰元素词汇表
@@ -493,19 +497,19 @@
 <div style="position:absolute; bottom:20px; left:40px; right:40px;
             display:flex; justify-content:space-between; align-items:center;">
   <!-- 左侧：章节信息 -->
-  <span style="font-size:11px; color:var(--text-secondary); opacity:0.5;
+  <span style="font-size:15px; color:var(--text-secondary); opacity:0.5;
                letter-spacing:1px;">
     PART 01 - 章节名称
   </span>
   <!-- 右侧：页码 + 品牌 -->
-  <span style="font-size:11px; color:var(--text-secondary); opacity:0.5;">
+  <span style="font-size:15px; color:var(--text-secondary); opacity:0.5;">
     07 / 15  |  品牌名
   </span>
 </div>
 ```
 
 页脚规则：
-- 字号 11px, text-secondary 色, opacity 0.5（极其低调，不抢内容视线）
+- 字号 15px, text-secondary 色, opacity 0.5（极其低调，不抢内容视线）
 - 左侧显示当前 PART 编号 + 章节名
 - 右侧显示 当前页/总页数 + 品牌名（如有）
 - **封面页、章节封面不显示页脚**
