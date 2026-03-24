@@ -54,7 +54,7 @@ One sentence → Interview → Research → Outline → Planning → Style + Ima
 
 **Required:**
 - **Python** >= 3.8
-- **Node.js** >= 18 (Puppeteer + dom-to-svg)
+- **Node.js** >= 18 (Puppeteer + dom-to-svg require it; verify with `node --version` in your active shell)
 
 **Install:**
 ```bash
@@ -67,6 +67,16 @@ pip install python-pptx lxml Pillow
 > cd ppt-output && npm init -y && npm install puppeteer dom-to-svg
 > ```
 > `html2svg.py` will auto-install missing deps on first run, but the delay may cause timeouts.
+
+**Fallback path (when dom-to-svg is unavailable):**
+
+When Node.js < 18 or dom-to-svg installation fails, html2svg.py automatically falls back to Puppeteer PDF + pdf2svg (text becomes paths, NOT editable). This requires system-level pdf2svg:
+```bash
+# Debian/Ubuntu
+sudo apt install pdf2svg
+# macOS
+brew install pdf2svg
+```
 
 **Optional (configure `.env`):**
 ```bash

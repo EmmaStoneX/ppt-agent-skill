@@ -481,8 +481,33 @@ window.__domToSvg = { documentToSVG, elementToSVG, inlineResources };
 """
 
 
+def _check_node():
+    """检查 Node.js 是否可用且 >= 18"""
+    try:
+        r = subprocess.run(
+            ["node", "--version"],
+            capture_output=True, text=True, timeout=5, shell=_IS_WIN
+        )
+        if r.returncode != 0:
+            print("Error: Node.js not found", file=sys.stderr)
+            return False
+        version = r.stdout.strip().lstrip('v')
+        major = int(version.split('.')[0])
+        if major < 18:
+            print(f"Error: Node.js >= 18 required, got v{version}", file=sys.stderr)
+            print("  Puppeteer and dom-to-svg require Node 18+", file=sys.stderr)
+            return False
+        return True
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        print("Error: Node.js not found", file=sys.stderr)
+        return False
+
+
 def ensure_deps(work_dir: Path) -> tuple:
     """安装依赖，返回 (方案名, bundle路径)"""
+    if not _check_node():
+        return ("pdf2svg", None)
+
     # puppeteer
     r = subprocess.run(
         ["node", "-e", "require('puppeteer')"],
@@ -493,9 +518,9 @@ def ensure_deps(work_dir: Path) -> tuple:
         subprocess.run(["npm", "install", "puppeteer"],
                        capture_output=True, text=True, timeout=180, cwd=str(work_dir), shell=_IS_WIN)
 
-    # dom-to-svg
+    # dom-to-svg (ESM-only package, require() 不可用，必须用 import())
     r = subprocess.run(
-        ["node", "-e", "require('dom-to-svg')"],
+        ["node", "-e", "import('dom-to-svg').catch(e=>{console.error(e.message);process.exit(1)})"],
         capture_output=True, text=True, timeout=10, cwd=str(work_dir), shell=_IS_WIN
     )
     if r.returncode != 0:
@@ -503,12 +528,14 @@ def ensure_deps(work_dir: Path) -> tuple:
         subprocess.run(["npm", "install", "dom-to-svg"],
                        capture_output=True, text=True, timeout=60, cwd=str(work_dir), shell=_IS_WIN)
         r = subprocess.run(
-            ["node", "-e", "require('dom-to-svg')"],
+            ["node", "-e", "import('dom-to-svg').catch(e=>{console.error(e.message);process.exit(1)})"],
             capture_output=True, text=True, timeout=10, cwd=str(work_dir), shell=_IS_WIN
         )
 
     if r.returncode != 0:
-        print("dom-to-svg unavailable, using pdf2svg fallback", file=sys.stderr)
+        print("dom-to-svg unavailable: " + (r.stderr.strip() or "install failed"),
+              file=sys.stderr)
+        print("Falling back to pdf2svg (text will NOT be editable)", file=sys.stderr)
         return ("pdf2svg", None)
 
     # 打包 dom-to-svg 为浏览器 bundle

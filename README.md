@@ -54,7 +54,7 @@
 
 **必须：**
 - **Python** >= 3.8
-- **Node.js** >= 18（Puppeteer + dom-to-svg）
+- **Node.js** >= 18（Puppeteer + dom-to-svg 要求，`node --version` 确认当前 shell 实际使用的版本）
 
 **安装：**
 ```bash
@@ -67,6 +67,16 @@ pip install python-pptx lxml Pillow
 > cd ppt-output && npm init -y && npm install puppeteer dom-to-svg
 > ```
 > `html2svg.py` 首次运行时如未检测到依赖也会自动安装，但耗时可能导致超时。
+
+**降级路径（dom-to-svg 不可用时）：**
+
+当 Node.js < 18 或 dom-to-svg 安装失败时，html2svg.py 自动降级为 Puppeteer PDF + pdf2svg 方案（文字变 path，不可编辑）。此路径需要系统级 pdf2svg：
+```bash
+# Debian/Ubuntu
+sudo apt install pdf2svg
+# macOS
+brew install pdf2svg
+```
 
 **可选（配置 `.env`）：**
 ```bash
