@@ -5,8 +5,9 @@ package-lock.json
 package.json
 .vscode/
 
-# 文档素材（用户私有）
-doc/
+# 文档素材（用户私有，但 showcase 展示图需要跟踪）
+doc/*
+!doc/showcase/
 
 # 运行时产物
 ppt-output/

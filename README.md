@@ -2,99 +2,125 @@
 
 **[English](README_EN.md)**
 
-> 模仿万元/页级别 PPT 设计公司的完整工作流，输出高质量 HTML 演示文稿 + 可编辑矢量 PPTX。
+> 模拟万元/页级 PPT 设计公司的完整工作流，从一句话需求到专业级演示文稿。
+
+## 效果展示
+
+> 以「PPT Agent Skill 降本增效」为主题的示例输出（蓝白商务风格，10 页，全流程约 25 分钟）：
+
+| 封面页 | 传统 vs AI 对比页 |
+|:---:|:---:|
+| ![封面页](doc/showcase/slide_01.png) | ![对比页](doc/showcase/slide_04.png) |
+
+| 6 步 Pipeline | 降本增效数据 |
+|:---:|:---:|
+| ![Pipeline](doc/showcase/slide_06.png) | ![数据总览](doc/showcase/slide_08.png) |
+
+| ROI 测算 | 结束页 |
+|:---:|:---:|
+| ![ROI](doc/showcase/slide_09.png) | ![结束页](doc/showcase/slide_10.png) |
 
 ## 工作流概览
 
 ```
-需求调研 → 资料搜集 → 大纲策划 → 策划稿 → 风格+配图+HTML设计稿 → 后处理(SVG+PPTX)
+一句话需求 → 需求调研 → 资料搜集 → 大纲策划 → 策划稿 → 风格+配图+HTML → 后处理(SVG+PPTX)
 ```
 
-## 效果展示
-
-> 以「新一代小米SU7发布」为主题的示例输出（小米橙风格）：
-
-| 封面页 | 配置对比页 |
-|:---:|:---:|
-| ![封面页](ppt-output/png/slide_01_cover.png) | ![配置对比](ppt-output/png/slide_02_models.png) |
-
-| 动力续航页 | 智驾安全页 |
-|:---:|:---:|
-| ![动力续航](ppt-output/png/slide_03_power.png) | ![智驾安全](ppt-output/png/slide_04_smart.png) |
-
-| 结束页 |
-|:---:|
-| ![结束页](ppt-output/png/slide_05_end.png) |
-
+| 步骤 | 说明 | 工具 |
+|------|------|------|
+| Step 1 | 需求调研（7 题三层递进） | Agent 对话 |
+| Step 2 | 资料搜集 | `web_search.py`（Brave + Tavily 双引擎） |
+| Step 3 | 大纲策划（金字塔原理） | Prompt #2 |
+| Step 4 | 内容分配 + 策划稿 | Prompt #3 + Bento Grid 布局选择 |
+| Step 5 | 风格 + 配图 + HTML 设计稿 | `generate_image.py`（Gemini 生图）+ Prompt #4 |
+| Step 6 | 后处理 | `html2svg.py` → `svg2pptx.py` |
 
 ## 核心特性
 
 | 特性 | 说明 |
 |------|------|
-| **6步Pipeline** | 需求 → 搜索 → 大纲 → 策划 → 设计 → 后处理，模拟专业 PPT 公司工作流 |
-| **8种预置风格** | 暗黑科技 / 小米橙 / 蓝白商务 / 朱红宫墙 / 清新自然 / 紫金奢华 / 极简灰白 / 活力彩虹 |
-| **Bento Grid 布局** | 7 种卡片式灵活布局，内容驱动版式 |
-| **智能配图** | AI 生成配图 + 5 种视觉融入技法（渐隐融合/色调蒙版/氛围底图等） |
-| **排版系统** | 7 级字号阶梯 + 间距层级 + 中英文混排规则 |
-| **色彩比例** | 60-30-10 法则 + accent 色使用约束 |
-| **数据可视化** | 8 种纯 CSS/SVG 图表（进度条/环形图/迷你折线/点阵图/KPI 卡等） |
-| **跨页叙事** | 密度交替节奏 / 章节色彩递进 / 封面-结尾呼应 / 渐进揭示 |
-| **页脚系统** | 统一页脚（章节信息 + 页码），跨页导航 |
-| **PPTX 兼容** | HTML → SVG → PPTX 管线，PPT 365 中右键"转换为形状"即可编辑 |
-
-## 输出产物
-
-| 文件 | 说明 |
-|------|------|
-| `preview.html` | 浏览器翻页预览（自动生成） |
-| `presentation.pptx` | PPTX 文件，PPT 365 中右键"转换为形状"可编辑 |
-| `svg/*.svg` | 单页矢量 SVG，可直接拖入 PPT |
-| `slides/*.html` | 单页 HTML 源文件 |
+| **6 步 Pipeline** | 模拟专业 PPT 公司完整工作流，端到端自动化 |
+| **智能搜索** | Brave + Tavily 双引擎，零依赖 Python 脚本，自动降级容错 |
+| **AI 配图** | Gemini 原生生图，16:9 宽屏，智能判断配图范围（封面/章节/结束页） |
+| **8 种预置风格** | 暗黑科技 / 小米橙 / 蓝白商务 / 朱红宫墙 / 清新自然 / 紫金奢华 / 极简灰白 / 活力彩虹 |
+| **7 种 Bento Grid 布局** | 卡片式灵活布局，内容驱动版式自动选择 |
+| **排版系统** | 7 级字号阶梯 + 中英文混排 + 60-30-10 色彩法则 |
+| **8 种数据可视化** | 进度条 / 环形图 / 迷你折线 / 对比柱 / 点阵图 / KPI 卡等（纯 CSS/SVG） |
+| **管线兼容规范** | `pipeline-compat.md` 记录所有 CSS → SVG → PPTX 转换陷阱和正确写法 |
+| **PPTX 全链路可编辑** | HTML → SVG → PPTX，PPT 365 中右键"转换为形状"即可编辑 |
+| **跨平台可移植** | 所有外部能力（搜索/生图/转换）均为独立 Python 脚本 + `.env` 配置，不绑定任何 Agent 框架 |
 
 ## 环境依赖
 
 **必须：**
-- **Node.js** >= 18（Puppeteer + dom-to-svg）
 - **Python** >= 3.8
-- **python-pptx**（PPTX 生成）
+- **Node.js** >= 18（Puppeteer + dom-to-svg）
 
 **一键安装：**
 ```bash
 pip install python-pptx lxml Pillow
-npm install puppeteer dom-to-svg
+npm install puppeteer dom-to-svg   # 首次运行 html2svg.py 时自动安装
+```
+
+**可选（配置 `.env`）：**
+```bash
+cp .env.example .env
+# 编辑 .env 填入 API Key：
+# BRAVE_API_KEY=xxx       — 网页搜索（Brave Search，免费 2000 次/月）
+# TAVILY_API_KEY=xxx      — 网页搜索 + 内容提取（Tavily）
+# IMAGE_API_KEY=xxx       — AI 配图（Gemini 生图）
+# IMAGE_API_BASE=xxx      — 生图 API 地址
+# IMAGE_MODEL=xxx         — 生图模型名
 ```
 
 ## 目录结构
 
 ```
 ppt-agent-skill/
-  SKILL.md                    # 主工作流指令（Agent 入口）
-  README.md                   # 本文件
-  README_EN.md                # English documentation
+  SKILL.md                        # Agent 主工作流指令（入口）
+  .env.example                    # 环境变量模板
   references/
-    prompts.md                # 5 套 Prompt 模板
-    style-system.md           # 8 种预置风格 + CSS 变量
-    bento-grid.md             # 7 种布局规格 + 卡片类型
-    method.md                 # 核心方法论
+    prompts.md                    # 5 套 Prompt 模板
+    style-system.md               # 8 种预置风格 + CSS 变量
+    bento-grid.md                 # 7 种布局规格 + 6 种卡片类型
+    pipeline-compat.md            # HTML→SVG→PPTX 管线兼容性规则
+    method.md                     # 核心方法论
   scripts/
-    html_packager.py          # 多页 HTML 合并为翻页预览
-    html2svg.py               # HTML → SVG（dom-to-svg，保留文字可编辑）
-    svg2pptx.py               # SVG → PPTX（OOXML 原生 SVG 嵌入）
+    web_search.py                 # 网页搜索（Brave + Tavily 双引擎）
+    generate_image.py             # AI 配图（Gemini 原生生图）
+    html_packager.py              # 多页 HTML 合并为翻页预览
+    html2svg.py                   # HTML → SVG（dom-to-svg，文字可编辑）
+    svg2pptx.py                   # SVG → PPTX（OOXML 原生形状）
+  doc/
+    showcase/                     # README 展示图
 ```
+
+## 输出产物
+
+| 文件 | 说明 |
+|------|------|
+| `ppt-output/presentation.pptx` | PPTX 文件（PPT 365 右键"转换为形状"可编辑） |
+| `ppt-output/svg/*.svg` | 单页矢量 SVG |
+| `ppt-output/slides/*.html` | 单页 HTML 源文件 |
+| `ppt-output/images/*.png` | AI 生成配图 |
+| `ppt-output/style.json` | 风格配置 |
+| `ppt-output/outline.json` | 大纲结构 |
+| `ppt-output/planning.json` | 策划稿（详细卡片数据） |
 
 ## 使用方式
 
-在对话中直接描述你的需求即可触发，Agent 会自动执行完整 6 步工作流：
+在对话中描述需求即可触发，Agent 自动执行 6 步工作流：
 
 ```
 你："帮我做一个关于 X 的 PPT"
-  → Agent 提问调研需求（等你回复）
-  → 自动搜索资料 → 生成大纲 → 策划稿 → 逐页设计 HTML
-  → 自动后处理：HTML → SVG → PPTX
-  → 输出全部产物到 ppt-output/
+  → Step 1: Agent 提问调研需求
+  → Step 2: web_search.py 搜索资料
+  → Step 3-4: 生成大纲 → 策划稿
+  → Step 5: 风格决策 + generate_image.py 配图 + 逐页 HTML 设计稿
+  → Step 6: html2svg.py + svg2pptx.py → 输出 PPTX
 ```
 
-**触发示例**：
+**触发示例：**
 
 | 场景 | 说法 |
 |------|------|
@@ -102,8 +128,6 @@ ppt-agent-skill/
 | 带素材 | "把这篇文档做成 PPT" / "用这份报告做 slides" |
 | 带要求 | "做 15 页暗黑风的 AI 安全汇报材料" |
 | 隐式触发 | "我要给老板汇报 Y" / "做个培训课件" / "做路演 deck" |
-
-> 全程无需手动执行任何脚本，所有后处理（预览合并、SVG 转换、PPTX 生成）由 Agent 在 Step 6 自动完成。
 
 ## 许可证
 
