@@ -328,8 +328,8 @@
 ## 画布规范（不可修改）
 
 - 固定尺寸: width=1280px, height=720px, overflow=hidden
-- 标题区: 左上 40px 边距, y=20~90, 最大高度 70px（含 PART 标签 + H1 标题 + 下划线装饰）
-- 内容区: padding 40px, y 从 100px 起, 可用高度 560px, 可用宽度 1200px
+- 标题区: 左上 40px 边距, y=20~120, 最大高度 100px（含 PART 标签 + H1 标题 + 下划线装饰 + margin）
+- 内容区: padding 40px, y 从 130px 起, 可用高度 530px, 可用宽度 1200px
 - 页脚区: 底部 40px 边距内，高度 20px
 
 ## 排版系统（Typography Scale）

@@ -946,7 +946,7 @@ class SvgConverter:
 # -------------------------------------------------------------------
 # 主流程
 # -------------------------------------------------------------------
-def convert(svg_input, output_path, on_progress=None):
+def convert(svg_input, output_path, notes_map=None, on_progress=None):
     svg_input = Path(svg_input)
     if svg_input.is_file():
         svg_files = [svg_input]
@@ -970,6 +970,15 @@ def convert(svg_input, output_path, on_progress=None):
     for i, svg_file in enumerate(svg_files):
         slide = prs.slides.add_slide(blank)
         converter.convert(svg_file, slide)
+
+        # 注入演讲者备注
+        if notes_map:
+            key = str(i + 1)
+            if key in notes_map:
+                notes_slide = slide.notes_slide
+                tf = notes_slide.notes_text_frame
+                tf.text = notes_map[key]
+
         s = converter.stats
         print(f"  [{i+1}/{total}] {svg_file.name} "
               f"({s['shapes']} shapes, {s['skipped']} skipped, {s['errors']} errors)")
@@ -986,8 +995,17 @@ def main():
     parser.add_argument('-o', '--output', default='presentation.pptx')
     parser.add_argument('--html-dir', default=None,
                         help='HTML source directory (for future notes extraction)')
+    parser.add_argument('--notes', default=None,
+                        help='JSON file mapping slide numbers to speaker notes')
     args = parser.parse_args()
-    convert(args.svg, args.output)
+
+    notes_map = None
+    if args.notes:
+        import json
+        with open(args.notes, 'r', encoding='utf-8') as f:
+            notes_map = json.load(f)
+
+    convert(args.svg, args.output, notes_map=notes_map)
 
 
 if __name__ == '__main__':
