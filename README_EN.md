@@ -56,11 +56,17 @@ One sentence → Interview → Research → Outline → Planning → Style + Ima
 - **Python** >= 3.8
 - **Node.js** >= 18 (Puppeteer + dom-to-svg)
 
-**Quick Install:**
+**Install:**
 ```bash
 pip install python-pptx lxml Pillow
-npm install puppeteer dom-to-svg   # Auto-installed on first html2svg.py run
 ```
+
+> **Important**: Puppeteer downloads Chromium (~170MB) on first install, and dom-to-svg
+> requires compilation. Pre-install before use to avoid long waits during Step 6:
+> ```bash
+> cd ppt-output && npm init -y && npm install puppeteer dom-to-svg
+> ```
+> `html2svg.py` will auto-install missing deps on first run, but the delay may cause timeouts.
 
 **Optional (configure `.env`):**
 ```bash

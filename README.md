@@ -56,11 +56,17 @@
 - **Python** >= 3.8
 - **Node.js** >= 18（Puppeteer + dom-to-svg）
 
-**一键安装：**
+**安装：**
 ```bash
 pip install python-pptx lxml Pillow
-npm install puppeteer dom-to-svg   # 首次运行 html2svg.py 时自动安装
 ```
+
+> **重要**：Puppeteer 首次安装需要下载 Chromium（~170MB），dom-to-svg 也需要编译，
+> 建议在使用前提前安装，避免工作流执行到 Step 6 时长时间等待：
+> ```bash
+> cd ppt-output && npm init -y && npm install puppeteer dom-to-svg
+> ```
+> `html2svg.py` 首次运行时如未检测到依赖也会自动安装，但耗时可能导致超时。
 
 **可选（配置 `.env`）：**
 ```bash
