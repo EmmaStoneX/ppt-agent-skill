@@ -139,7 +139,7 @@ description: 专业 PPT 演示文稿全流程 AI 生成助手。模拟顶级 PPT
 | 条件 | 行为 |
 |------|------|
 | `BRAVE_API_KEY` 或 `TAVILY_API_KEY` 已配置 | 使用 `web_search.py` 调用搜索 API |
-| 两个都未配置 | 降级为依赖用户提供材料 + agent 自身知识 |
+| 两个都未配置 | 降级为co-claw自身的搜索工具 + 依赖用户提供材料 + agent 自身知识 |
 
 ##### 搜索调用方式
 
@@ -174,7 +174,7 @@ python SKILL_DIR/scripts/web_search.py --extract "https://example.com/article"
 
 **执行**：
 1. 根据主题规划查询（数量参考复杂度表）
-2. 用 `web_search.py` 批量搜索，也可用 agent 自带搜索工具补充
+2. 优先用 `web_search.py` 批量搜索，降级后用 agent 自带搜索工具补充
 3. 每组结果摘要总结
 
 **产物**：搜索结果集合 JSON

@@ -68,7 +68,9 @@ pip install python-pptx lxml Pillow
 > **重要**：Puppeteer 首次安装需要下载 Chromium（~170MB），dom-to-svg 也需要编译，
 > 建议在使用前提前安装，避免工作流执行到 Step 6 时长时间等待：
 > ```bash
-> cd ppt-output && npm init -y && npm install puppeteer dom-to-svg
+> cd ppt-output 
+  npm init -y 
+  npm install puppeteer dom-to-svg
 > ```
 > `html2svg.py` 首次运行时如未检测到依赖也会自动安装，但耗时可能导致超时。
 
