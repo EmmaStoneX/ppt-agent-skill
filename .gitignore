@@ -4,6 +4,7 @@ node_modules/
 package-lock.json
 package.json
 .vscode/
+logs/
 
 # 文档素材（用户私有，但 showcase 展示图需要跟踪）
 doc/*
