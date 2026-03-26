@@ -66,6 +66,11 @@ cat SKILL_DIR/references/icons/shield-check.svg
 | ⚡ 操作/动作 | `action` | `check`, `plus`, `edit`, `trash`, `search`, `settings`, `filter` |
 | ⏰ 时间/日程 | `time` | `clock`, `timer`, `calendar`, `hourglass`, `history` |
 | 🌿 自然/环保 | `nature` | `leaf`, `tree`, `sun`, `cloud`, `sprout`, `recycle` |
+| 🚗 交通/物流 | `transport` | `car`, `truck`, `plane`, `ship`, `train`, `package`, `box` |
+| 🏥 健康/医疗 | `health` | `heart`, `activity`, `stethoscope`, `pill`, `syringe`, `thermometer` |
+| 🎓 教育/学习 | `education` | `graduation-cap`, `book`, `school`, `pencil`, `library`, `backpack` |
+| 🍽️ 餐饮/食品 | `food` | `coffee`, `pizza`, `cake`, `apple`, `wine`, `utensils` |
+| 🔷 形状/装饰 | `shape` | `circle`, `square`, `triangle`, `hexagon`, `star`, `diamond`, `sparkles` |
 
 > 可用 `python SKILL_DIR/scripts/icon_resolver.py --categories` 查看完整列表
 > 可用 `python SKILL_DIR/scripts/icon_resolver.py --category chart` 浏览某分类所有图标

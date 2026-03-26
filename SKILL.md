@@ -300,6 +300,15 @@ python SKILL_DIR/scripts/generate_image.py \
 - 429/配额耗尽/超时/500 错误会触发重试，其他错误直接跳过
 - 单张失败不阻塞后续，该页降级为纯 CSS 装饰
 
+**降级策略**（generate_image.py 失败时）：
+
+| 失败场景 | 降级方式 |
+|---------|---------|
+| `IMAGE_API_KEY` 未配置 | 跳过所有配图，全部页面使用纯 CSS 渐变/几何装饰 |
+| API 配额耗尽（429 连续失败） | 已成功的图片照常使用，剩余页面降级为 CSS 装饰 |
+| 单张生成超时/500 错误 | 自动重试 2 次后放弃，该页降级为 CSS 装饰 |
+| Python 不可用 | 跳过所有配图，同上 |
+
 **禁止并发调用** — 不要同时启动多个 `generate_image.py` 进程，会触发 API 配额限制。
 
 ##### 配图时机
@@ -375,6 +384,17 @@ python SKILL_DIR/scripts/icon_resolver.py "增长" --svg --color "var(--accent-1
 ```
 
 **产物**：每张卡片对应的图标 SVG（保存到 `OUTPUT_DIR/icons_resolved/` 或直接内联到 HTML）
+
+**降级策略**（icon_resolver.py 失败时）：
+
+| 失败场景 | 降级方式 |
+|---------|---------|
+| 脚本报错/Python 不可用 | 直接读取 `references/icons/{icon-name}.svg` 文件，用常见图标名猜测 |
+| 关键词无匹配结果 | 换用英文同义词重试一次；仍无结果则该卡片不使用图标，用 CSS 色块圆形替代 |
+| 批量模式部分失败 | 成功的照常使用，失败的单个重试或降级为无图标 |
+
+> **⛔ 上下文保护**：禁止将 `tags.json`（224KB）或 `icons/` 目录内容直接读取到 Prompt 中。
+> 图标匹配必须通过 `icon_resolver.py` 脚本完成，或直接按文件名读取单个 SVG。
 
 #### 5d. 逐页 HTML 设计稿生成
 
