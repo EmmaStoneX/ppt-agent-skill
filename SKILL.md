@@ -58,7 +58,7 @@ description: 专业 PPT 演示文稿全流程 AI 生成助手。模拟顶级 PPT
 
 ## 路径约定
 
-整个流程中反复用到以下路径，在 Step 1 完成后立即确定：
+整个流程中反复用到以下路径，在 Step 1 完成后**必须立即确定并创建**：
 
 | 变量 | 含义 | 获取方式 |
 |------|------|---------|
@@ -148,6 +148,22 @@ description: 专业 PPT 演示文稿全流程 AI 生成助手。模拟顶级 PPT
 | 执行层 | 7. 补充信息（演讲人/品牌色/必含/必避/页数/配图偏好） | 具体执行细节 |
 
 **产物**：需求 JSON（topic + requirements）
+
+#### ⛔ Step 1 完成后必须立即执行：创建 OUTPUT_DIR
+
+> **禁止跳过。** 在进入 Step 2 之前，必须先完成以下操作，否则后续所有文件会错误地写入 `ppt-output/` 根目录。
+
+1. 从需求 JSON 的 topic 字段提取 `SAFE_TOPIC`（清洗规则见上方「路径约定」）
+2. 拼接 `OUTPUT_DIR = SKILL_DIR/ppt-output/{SAFE_TOPIC}_{YYYYMMDD}/`
+3. **执行 mkdir 创建目录**：
+   ```bash
+   mkdir -p OUTPUT_DIR
+   mkdir -p OUTPUT_DIR/slides
+   mkdir -p OUTPUT_DIR/search_results
+   ```
+4. 后续所有文件（queries.json、outline.json、planning.json、style.json、slides/*.html 等）**必须写入 OUTPUT_DIR**，禁止写入 `ppt-output/` 根目录
+
+**自检**：如果你发现自己要写入的路径不包含 `{SAFE_TOPIC}_{YYYYMMDD}/` 子目录，说明你跳过了这一步，请立即停下来补做。
 
 ---
 
@@ -553,7 +569,7 @@ pip install python-pptx lxml Pillow 2>/dev/null
 
 ## 输出目录结构
 
-所有产物均输出到 `OUTPUT_DIR`（即 `SKILL_DIR/ppt-output/`），详见 README.md「输出产物」章节。
+所有产物均输出到 `OUTPUT_DIR`（即 `SKILL_DIR/ppt-output/{SAFE_TOPIC}_{YYYYMMDD}/`），详见 README.md「输出产物」章节。
 
 ---
 
