@@ -103,7 +103,8 @@ ppt-agent-skill/
   SKILL.md                        # Agent 主工作流指令（入口）
   .env.example                    # 环境变量模板
   references/
-    prompts.md                    # 5 套 Prompt 模板
+    prompts.md                    # Prompt 模板索引
+    prompts/                      # 5 套独立 Prompt 模板（按步骤按需加载）
     style-system.md               # 6 种预置风格 + CSS 变量 + 明度自动判断
     bento-grid.md                 # 7 种布局规格 + 6 种卡片类型
     pipeline-compat.md            # HTML→SVG→PPTX 管线兼容性规则

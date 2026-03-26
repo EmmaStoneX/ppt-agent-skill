@@ -129,7 +129,7 @@ description: 专业 PPT 演示文稿全流程 AI 生成助手。模拟顶级 PPT
 
 > **禁止跳过。** 无论主题多简单，都必须提问并等用户回复后才能继续。不替用户做决定。
 
-**执行**：使用 `references/prompts.md` Prompt #1
+**执行**：读取 `references/prompts/prompt_1_survey.md`
 1. 搜索主题背景资料（3-5 条）
 2. 根据复杂度选择完整 7 题或精简 3 题，一次性发给用户
 3. **等待用户回复**（阻断点）
@@ -211,7 +211,7 @@ python SKILL_DIR/scripts/web_search.py --extract "https://example.com/article"
 > - **存在** → 读取所有 JSON 文件，提取标题、摘要、关键数据点，整理为「搜索资料摘要」，注入到 Prompt #2 的 `{{CONTEXT}}` 占位符中
 > - **不存在** → 依赖 AI 自身知识 + 用户提供的材料，`{{CONTEXT}}` 填入已知信息
 
-**执行**：使用 `references/prompts.md` Prompt #2（大纲架构师 v2.0）
+**执行**：读取 `references/prompts/prompt_2_outline.md`
 
 **方法论**：金字塔原理 -- 结论先行、以上统下、归类分组、逻辑递进
 
@@ -230,7 +230,7 @@ python SKILL_DIR/scripts/web_search.py --extract "https://example.com/article"
 > - **存在** → 读取所有 JSON 文件（如 Step 3 已读取可复用），将搜索素材精准匹配到大纲每一页
 > - **不存在** → 依赖 AI 自身知识填充内容，确保每张卡片的信息密度仍然达标
 
-**执行**：使用 `references/prompts.md` Prompt #3（内容分配与策划稿）
+**执行**：读取 `references/prompts/prompt_3_planning.md`
 
 **要点**：
 - 有搜索素材时，将其精准映射到每页；无搜索素材时，用 AI 知识库填充
@@ -238,6 +238,26 @@ python SKILL_DIR/scripts/web_search.py --extract "https://example.com/article"
 - 同时确定 page_type / layout_hint / cards[] 结构
 - **每个内容页至少 3 张卡片 + 2 种 card_type + 1 张 data 卡片**
 - 布局选择参考 `references/bento-grid.md` 的决策矩阵
+
+**分批生成策略**（防止 output token 截断）：
+
+> ⚠️ 策划稿 JSON 通常需要 8K-20K tokens 输出。当 `max_tokens` 受限（如 ≤ 8192）时，
+> 一次性输出所有页面必定被截断。**必须分批生成，通过文件追加汇总。**
+
+| PPT 页数 | 批次划分 | 每批输出量 |
+|---------|---------|----------|
+| ≤ 8 页 | 2 批（封面~目录~Part1 / Part2~结束页） | ~3-4K tokens/批 |
+| 9-15 页 | 3 批（封面~Part1 / Part2~Part3 / Part4~结束页） | ~4-5K tokens/批 |
+| > 15 页 | 按 Part 为单位，每批 1 个 Part（3-5 页） | ~4-6K tokens/批 |
+
+**执行流程**：
+1. 第 1 批：生成封面页 + 目录页 + Part 1 的所有页面 → `write` 写入 `OUTPUT_DIR/planning_part1.json`
+2. 第 2 批：继续生成 Part 2 的所有页面 → `write` 追加到 `OUTPUT_DIR/planning_part2.json`
+3. 重复直到结束页
+4. 全部完成后，合并为 `OUTPUT_DIR/planning.json`（一个完整的 JSON 数组）
+
+> **关键**：每批生成时，上下文中只需要包含 outline.json 中对应 Part 的内容 + search_summary，
+> 不需要包含之前批次已生成的策划稿 JSON（已写入文件）。这样既节省上下文又避免截断。
 
 **产物质量关卡**（不达标则补充后再进入下一步）：
 - 每个内容页 `content_summary.main_content` ≥ 40 字
@@ -420,7 +440,7 @@ python SKILL_DIR/scripts/icon_resolver.py "增长" --svg --color "var(--accent-1
 
 #### 5d. 逐页 HTML 设计稿生成
 
-**执行**：使用 `references/prompts.md` Prompt #4 + `references/bento-grid.md` + `references/icon-guide.md`
+**执行**：读取 `references/prompts/prompt_4_design.md` + `references/bento-grid.md` + `references/icon-guide.md`
 > **禁止跳过策划稿直接生成。** 每页必须先有 Step 4 的结构 JSON。
 
 > **⛔ 禁止编写脚本批量生成。** AI 必须逐页手写完整的 HTML 代码（每页 150-500 行）。
@@ -547,7 +567,12 @@ pip install python-pptx lxml Pillow 2>/dev/null
 
 | 文件 | 何时阅读 | 关键内容 |
 |------|---------|---------|
-| `references/prompts.md` | 每步生成前 | 5 套 Prompt 模板（调研/大纲/策划/设计/备注）|
+| `references/prompts.md` | 查索引 | Prompt 模板索引（指向独立文件） |
+| `references/prompts/prompt_1_survey.md` | Step 1 | 需求调研 7 题问卷模板 |
+| `references/prompts/prompt_2_outline.md` | Step 3 | 大纲架构师（金字塔原理 + JSON 格式） |
+| `references/prompts/prompt_3_planning.md` | Step 4 | 内容分配与策划稿模板 |
+| `references/prompts/prompt_4_design.md` | Step 5d | HTML 设计稿生成（排版/色彩/布局/可视化/管线约束） |
+| `references/prompts/prompt_5_notes.md` | 可选 | 演讲备注模板 |
 | `references/style-system.md` | Step 5a | 预置风格 + CSS 变量 + 风格 JSON 模型 |
 | `references/bento-grid.md` | Step 5d | 7 种布局精确坐标 + 5 种卡片类型 + 决策矩阵 |
 | `references/icon-guide.md` | Step 5c/5d | Lucide 图标系统使用指南 + 分类速查 + 内联规范 |
