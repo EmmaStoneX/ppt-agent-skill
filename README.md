@@ -2,7 +2,7 @@
 
 **[English](README_EN.md)**
 
-> 模拟万元/页级 PPT 设计公司的完整工作流，从一句话需求到专业级演示文稿。
+> 模拟 PPT 设计公司的完整工作流，从一句话需求到专业级演示文稿。
 
 > **期望管理**：AI 生成的 PPT 能达到 80-90% 的完成度（结构合理、风格统一、数据可视化到位），
 > 但局部细节（文字溢出、间距微调、个别页面排版）仍需人工审查和微调。
@@ -81,8 +81,16 @@ pip install python-pptx lxml Pillow
 ```bash
 # Debian/Ubuntu
 sudo apt install pdf2svg
-# macOS
-brew install pdf2svg
+
+# CentOS/RHEL
+sudo yum install pdf2svg
+# 或使用 EPEL 源
+sudo yum install epel-release
+sudo yum install pdf2svg
+
+# Windows
+# 下载预编译版本：https://github.com/jalios/pdf2svg-windows/releases
+# 或使用 Chocolatey：choco install pdf2svg
 ```
 
 **可选（配置 `.env`）：**
@@ -121,7 +129,7 @@ ppt-agent-skill/
     web_search.py                 # 网页搜索（Brave + Tavily 双引擎）
     generate_image.py             # AI 配图（Gemini 原生生图）
     icon_resolver.py              # 图标智能匹配（中英文关键词 → Lucide SVG）
-    extract_style.py              # 风格提取工具
+    extract_style.py              # PPT风格提取工具
     html_packager.py              # 多页 HTML 合并为翻页预览
     html2svg.py                   # HTML → SVG（dom-to-svg，文字可编辑）
     svg2pptx.py                   # SVG → PPTX（OOXML 原生形状）
@@ -183,6 +191,4 @@ ppt-agent-skill/
 | 带要求 | "做 15 页暗黑风的 AI 安全汇报材料" |
 | 隐式触发 | "我要给老板汇报 Y" / "做个培训课件" / "做路演 deck" |
 
-## 许可证
 
-[MIT](LICENSE)

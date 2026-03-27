@@ -79,8 +79,16 @@ When Node.js < 18 or dom-to-svg installation fails, html2svg.py automatically fa
 ```bash
 # Debian/Ubuntu
 sudo apt install pdf2svg
-# macOS
-brew install pdf2svg
+
+# CentOS/RHEL
+sudo yum install pdf2svg
+# Or use EPEL repository
+sudo yum install epel-release
+sudo yum install pdf2svg
+
+# Windows
+# Download precompiled version: https://github.com/jalios/pdf2svg-windows/releases
+# Or use Chocolatey: choco install pdf2svg
 ```
 
 **Optional (configure `.env`):**
@@ -181,6 +189,3 @@ You: "Make a PPT about X"
 | With specs | "15-page dark tech style AI safety presentation" |
 | Implicit | "I need to present to my boss about Y" / "Make training materials" |
 
-## License
-
-[MIT](LICENSE)
