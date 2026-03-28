@@ -11,31 +11,11 @@ PPT 设计稿中的图标统一使用 [Lucide](https://lucide.dev) 图标库（1
 
 ## 使用方式
 
-### 方式 1: 脚本智能匹配（推荐）
+### 方式 1: 直接读取 SVG 文件（推荐）
 
-通过 `scripts/icon_resolver.py` 按关键词（中/英文）匹配图标：
+在新流程中，图标名在 Step 4 策划稿阶段由 AI 根据分类速查表直接指定，Step 5d 按名称读取文件即可。
 
-```bash
-# 获取最匹配的图标 SVG 代码
-python SKILL_DIR/scripts/icon_resolver.py "增长" --svg --color "var(--accent-1)" --size 32
-
-# 多关键词匹配，返回 top 5
-python SKILL_DIR/scripts/icon_resolver.py "数据" "分析" "图表"
-
-# 批量匹配（为每个卡片分配图标）
-cat > OUTPUT_DIR/icon_queries.json << 'EOF'
-[
-  {"id": "card1_icon", "keywords": ["数据", "增长"]},
-  {"id": "card2_icon", "keywords": ["安全", "防护"]},
-  {"id": "card3_icon", "keywords": ["团队", "协作"]}
-]
-EOF
-python SKILL_DIR/scripts/icon_resolver.py --batch OUTPUT_DIR/icon_queries.json --output-dir OUTPUT_DIR/icons_resolved --color "var(--accent-1)" --size 32
-```
-
-### 方式 2: 直接读取 SVG 文件
-
-如果已知图标名，直接读取文件内容内联到 HTML：
+如果已知图标名（从策划稿 JSON 的 `card.icon` 字段获取），直接读取文件内容内联到 HTML：
 
 ```bash
 # 图标路径格式
@@ -44,6 +24,18 @@ SKILL_DIR/references/icons/{icon-name}.svg
 # 示例
 cat SKILL_DIR/references/icons/trending-up.svg
 cat SKILL_DIR/references/icons/shield-check.svg
+```
+
+### 方式 2: 脚本智能匹配（降级修正）
+
+当策划稿中指定的图标文件不存在时，通过 `scripts/icon_resolver.py` 按关键词（中/英文）修正：
+
+```bash
+# 获取最匹配的图标 SVG 代码
+python SKILL_DIR/scripts/icon_resolver.py "增长" --svg --color "var(--accent-1)" --size 32
+
+# 多关键词匹配，返回 top 5
+python SKILL_DIR/scripts/icon_resolver.py "数据" "分析" "图表"
 ```
 
 ---

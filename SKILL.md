@@ -19,14 +19,31 @@ description: 专业 PPT 演示文稿全流程 AI 生成助手。模拟顶级 PPT
 
 ## 环境感知
 
-开始工作前自省 agent 拥有的工具能力：
+开始工作前自省 agent 拥有的工具能力，分两层检测：
+
+### 第一层：API 能力检测
 
 | 能力 | 降级策略 |
 |------|---------|
 | **信息获取**（`.env` 中配置 `BRAVE_API_KEY` 或 `TAVILY_API_KEY` 即启用） | 未配置 -> 依赖用户提供材料 + agent 自身知识 |
 | **图片生成**（`.env` 中配置 `IMAGE_API_KEY` 即启用） | 可选功能，默认不启用。未配置或用户未主动选择配图 -> 纯 CSS 装饰替代 |
 | **文件输出** | 必须有 |
-| **脚本执行**（Python/Node.js） | 缺失 -> 跳过自动打包和 SVG 转换 |
+
+### 第二层：管线依赖检测与自动安装
+
+在 Step 1 完成后、进入 Step 2 之前，立即执行以下依赖检测和安装。**不要等到 Step 6 才发现环境问题。**
+
+| 依赖项 | 检测命令 | 安装方式 | 失败降级 |
+|--------|---------|---------|---------|
+| **Python pip 包**（lxml, python-pptx, Pillow） | `python -c "import lxml; from pptx import Presentation; from PIL import Image"` | `pip install lxml python-pptx Pillow` | **必须安装**，否则无法生成 PPTX。提示用户安装后重新运行。 |
+| **Node.js >= 18** | `node --version` | 有 nvm: `nvm install 18 && nvm use 18`<br>无 nvm: 从 [nodejs.org](https://nodejs.org) 下载安装 | 降级：跳过 SVG/PPTX 生成（Step 6 步骤 2-3），只输出 `preview.html` |
+| **npm 包**（puppeteer, dom-to-svg） | `node -e "require('puppeteer')" && node -e "import('dom-to-svg').catch(e=>{process.exit(1)})"` | `npm install puppeteer dom-to-svg` | 同上降级 |
+
+**执行原则**：
+1. 按顺序检测每个依赖项，执行对应的检测命令
+2. 检测失败时，立即执行安装命令（自动安装）
+3. 安装失败时，记录降级状态，并在 Step 6 前提醒用户
+4. **管线依赖不就绪时，仍可进入 Step 1-5 生成 HTML，但必须在环境感知阶段明确记录降级状态**
 
 **原则**：检查实际可调用的工具列表，有什么用什么。
 
@@ -426,50 +443,40 @@ python SKILL_DIR/scripts/generate_image.py \
 
 **产物**：`OUTPUT_DIR/images/` 下的配图文件
 
-#### 5c. 图标匹配（在生成 HTML 之前）
+#### 5c. 图标验证（在生成 HTML 之前）
 
-> **⛔ 不可跳过。** `icon_resolver.py` 是纯本地脚本（读取本地 `tags.json` + `icons/` 目录），
-> **不依赖任何网络 API**。即使配图（Step 5b）失败、搜索（Step 2）失败，图标匹配仍然必须执行。
-> 禁止因其他步骤的网络失败而跳过图标匹配。
+> **⛔ 不可跳过。** 图标名已在 Step 4 策划稿中由 AI 直接指定，此步骤仅验证文件是否存在。
+> **不依赖任何网络 API**。即使配图（Step 5b）失败、搜索（Step 2）失败，图标验证仍然必须执行。
+> 禁止因其他步骤的网络失败而跳过图标验证。
 >
 > **禁止使用 emoji 表情（如 📊💡🔒）替代图标。** emoji 在专业 PPT 中显得廉价，且在 PPTX 转换后渲染不一致。
 > 所有图标必须使用 Lucide SVG 内联方式。
 
-为策划稿中的每个卡片匹配合适的 Lucide 图标，供 HTML 设计稿使用。详见 `references/icon-guide.md`。
+验证策划稿中指定的图标文件是否存在，不存在时修正或重新选择。详见 `references/icon-guide.md`。
 
-```bash
-# 批量匹配：为每个卡片准备关键词
-cat > OUTPUT_DIR/icon_queries.json << 'EOF'
-[
-  {"id": "slide02_card1", "keywords": ["数据", "分析"]},
-  {"id": "slide02_card2", "keywords": ["增长", "趋势"]},
-  {"id": "slide03_card1", "keywords": ["安全", "防护"]}
-]
-EOF
+**执行流程**：
+1. 遍历 `OUTPUT_DIR/planning.json` 中所有卡片的 `icon` 字段
+2. 检查 `SKILL_DIR/references/icons/{icon}.svg` 文件是否存在
+3. **存在** → 通过验证
+4. **不存在** → 用 `icon_resolver.py "{图标名}" --svg` 单次查询修正，或从 `references/icon-guide.md` 的分类速查表重新选择
 
-python SKILL_DIR/scripts/icon_resolver.py \
-  --batch OUTPUT_DIR/icon_queries.json \
-  --output-dir OUTPUT_DIR/icons_resolved \
-  --color "var(--accent-1)" --size 24
-```
-
-也可以单个匹配后直接获取 SVG：
+**单次修正示例**（当图标文件不存在时）：
 ```bash
 python SKILL_DIR/scripts/icon_resolver.py "增长" --svg --color "var(--accent-1)" --size 24
 ```
 
-**产物**：每张卡片对应的图标 SVG（保存到 `OUTPUT_DIR/icons_resolved/` 或直接内联到 HTML）
+**产物**：验证通过的图标名列表
 
-**降级策略**（icon_resolver.py 失败时）：
+**降级策略**（图标文件不存在时）：
 
 | 失败场景 | 降级方式 |
 |---------|---------|
+| 图标文件不存在 | 用 `icon_resolver.py` 单次查询修正，或从分类速查表重新选择 |
 | 脚本报错/Python 不可用 | 直接读取 `references/icons/{icon-name}.svg` 文件，用常见图标名猜测 |
 | 关键词无匹配结果 | 换用英文同义词重试一次；仍无结果则该卡片不使用图标，用 CSS 色块圆形替代 |
-| 批量模式部分失败 | 成功的照常使用，失败的单个重试或降级为无图标 |
 
 > **⛔ 上下文保护**：禁止将 `tags.json`（224KB）或 `icons/` 目录内容直接读取到 Prompt 中。
-> 图标匹配必须通过 `icon_resolver.py` 脚本完成，或直接按文件名读取单个 SVG。
+> 图标修正必须通过 `icon_resolver.py` 脚本完成，或直接按文件名读取单个 SVG。
 
 #### 5d. 逐页 HTML 设计稿生成
 
@@ -495,11 +502,17 @@ python SKILL_DIR/scripts/icon_resolver.py "增长" --svg --color "var(--accent-1
 - **存在** → 将图片绝对路径填入 `<img src="...">` 标签，使用 Prompt #4 中的融入技法
 - **不存在**（生成失败或用户未要求配图）→ 该页不使用 `<img>` 标签，改用纯 CSS 装饰
 
+**图标使用方式**（从策划稿中获取图标名）：
+1. 从当前页 `planning.json` 的 `card.icon` 字段获取图标名（如 `trending-up`）
+2. 执行 `cat SKILL_DIR/references/icons/{icon}.svg` 读取 SVG 内容
+3. 替换 `stroke="currentColor"` 为 `stroke="var(--accent-1)"`，调整 `width`/`height`
+4. 内联到 HTML 的图标容器中
+
 **核心设计约束**（完整清单见 Prompt #4 内部）：
 - 画布 1280x720px，overflow:hidden
 - 所有颜色通过 CSS 变量引用，禁止硬编码
 - 凡视觉可见元素必须是真实 DOM 节点，图形优先用内联 SVG
-- **图标使用 Lucide 图标库**（`references/icons/`），禁止手绘 SVG 图标。通过 `icon_resolver.py` 匹配或直接读取 SVG 文件内联到 HTML
+- **图标使用 Lucide 图标库**（`references/icons/`），禁止手绘 SVG 图标。直接按策划稿中的图标名读取 SVG 文件内联到 HTML
 - 禁止 `::before`/`::after` 伪元素用于视觉装饰、禁止 `conic-gradient`、禁止 CSS border 三角形
 - 配图融入设计：渐隐融合/色调蒙版/氛围底图/裁切视窗/圆形裁切（技法详见 Prompt #4）
 

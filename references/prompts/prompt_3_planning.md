@@ -47,6 +47,17 @@
 - 1 个综述 + 3-4 个子项 -> **顶部英雄式**（推荐：总分结构清晰）
 - 4-6 个异构信息块 -> **混合网格**（推荐：信息密度最高）
 
+#### 图标选择指南
+每个内容页的卡片必须指定 `icon` 字段（Lucide 图标名，不含 .svg 后缀）。参考 `references/icon-guide.md` 的分类速查表：
+- 数据/图表类卡片 → `chart-bar`, `chart-line`, `trending-up`, `trending-down`
+- 商务/目标类 → `target`, `briefcase`, `award`, `trophy`
+- 技术/系统类 → `cpu`, `server`, `database`, `code`, `cloud`
+- 安全/防护类 → `shield`, `shield-check`, `lock`, `key`
+- 用户/团队类 → `user`, `users`, `user-check`, `contact`
+- 流程/步骤类 → `arrow-right`, `check-circle`, `play-circle`
+
+封面页和结束页的卡片可省略 `icon` 字段。
+
 ## 输出格式
 
 为每页输出一个 JSON 对象，整体组成 JSON 数组。每个对象同时包含"内容"和"策划结构"：
@@ -71,6 +82,7 @@
     {
       "position": "位置描述（top-left / top-right / bottom-left 等）",
       "card_type": "text | data | list | chart_placeholder | tag_cloud | process",
+      "icon": "trending-up",
       "title": "卡片标题（12字内）",
       "content": "卡片正文（80字内）",
       "data_points": ["具体数据"],
@@ -90,4 +102,5 @@
 - 避免使用"单一焦点"布局，除非该页确实只需要一个全屏图表
 - 零幻觉：所有数据必须来自搜索结果
 - 覆盖所有页面（封面到结束页）
+- **每个内容页的卡片必须填写 `icon` 字段**：从 `references/icon-guide.md` 的分类速查表中选择合适的 Lucide 图标名（不含 .svg 后缀），如 `trending-up`、`shield-check`、`users`。封面页和结束页的卡片可省略此字段。
 ```
